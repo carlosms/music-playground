@@ -75,7 +75,7 @@ $ go run cmd/noise/main.go
 
 Sound is produced by the the propagation of a vibration through air.
 
-From the code in this repository we instructing the computer to move the diaphragm of the speaker back and forth quickly. This diaphragm oscillation causes the air in front of the speaker to move also back and forth, in turn pushing the air in front of it to also move, and so on until this movement reaches the air in contact with our eardrums.
+From the code in this repository we are instructing the computer to move the diaphragm of the speaker back and forth quickly. This diaphragm oscillation causes the air in front of the speaker to move also back and forth, in turn pushing the air in front of it to also move, and so on until this movement reaches the air in contact with our eardrums.
 
 So the vibration that reaches our ear is produced by a wave of pressure. Let's try to oscillate the speaker at a constant rate to see how it sounds.
 
@@ -98,7 +98,7 @@ A sound wave can be simplified to the following parameters:
   λ = _v_ / _f_
 
 ```
-Y: Displacement of air molecule
+Y: Displacement of air molecules
 ┤
 ┤               ◄---------------------------- T ---------------------------►
 ┤          ╭────────╮                                                  ╭────────╮
@@ -109,10 +109,10 @@ Y: Displacement of air molecule
 ┼╯ ------ equilibrium -----   ╰╮                            ╭╯                            ╰╮
 ┤          position            ╰─╮                        ╭─╯                              ╰─╮
 ┤                                ╰─╮                   ╭──╯                                  ╰─╮
-┤                                  ╰──╮              ╭─╯                                       ╰──╮
-┤                                     ╰──╮        ╭──╯                                            ╰──╮
-┤                                        ╰────────╯                                                  ╰───
- ┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────
+┤                                  ╰──╮              ╭─╯                                       ╰─
+┤                                     ╰──╮        ╭──╯                                           
+┤                                        ╰────────╯                                              
+ ┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬────┬
  X: Time
 ```
 
