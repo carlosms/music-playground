@@ -249,3 +249,101 @@ This program plays a few random robot noises that could be sound effects from an
 ```shell
 $ go run cmd/wave/main.go
 ```
+
+### 1.3 Pure Waves
+
+Square waves are OK, and you can create amazing music such as chiptune.
+But if we want a more _musical_ or _natural_ sound we can create sine waves.
+
+Pure sine waves do not really replicate the feel of any instrument, but we're getting closer. This is the kind of wave that a tuning fork produces.
+
+We can create one with this function:
+
+```go
+const (
+	sampleRate        = 44100
+	bitDepthInBytes   = 2
+
+	equilibrium int16 = 0
+)
+
+var max = int16((math.Pow(2, 8*bitDepthInBytes) - 1) / 2) // (2^16 - 1) / 2
+
+func sineWave(freq float64, amplitude int16, duration time.Duration) io.Reader {
+	if amplitude > max {
+		panic("amplitude max value is 32767")
+	}
+
+	samplesPeriod := int(sampleRate / freq)
+
+	nBytes := bitDepthInBytes * int(sampleRate*duration.Seconds())
+	buf := make([]byte, nBytes)
+
+	for i := 0; i < nBytes; i += bitDepthInBytes {
+		pos := (i / bitDepthInBytes) % samplesPeriod
+
+		radian := float64(pos) / float64(samplesPeriod) * 2 * math.Pi
+		value := equilibrium + int16(math.Round(float64(amplitude)*math.Sin(radian)))
+
+		// little-endian
+		buf[i] = byte(value)
+		if bitDepthInBytes == 2 {
+			buf[i+1] = byte(value >> 8)
+		}
+	}
+
+	return bytes.NewReader(buf)
+}
+```
+
+Which, visualized with the previous `plot` function produces this output:
+
+```
+  32767 ┤                                            
+  28671 ┤                                            
+  24575 ┤                                            
+  20479 ┤                                            
+  16384 ┤                                            
+  12288 ┤   ╭───╮                 ╭───╮              
+   8192 ┤ ╭─╯   ╰─╮             ╭─╯   ╰─╮            
+   4096 ┤╭╯       ╰╮           ╭╯       ╰╮           
+      0 ┼╯         ╰╮         ╭╯         ╰╮          
+  -4096 ┤           ╰╮       ╭╯           ╰╮       ╭ 
+  -8192 ┤            ╰─╮   ╭─╯             ╰─╮   ╭─╯ 
+ -12288 ┤              ╰───╯                 ╰───╯   
+ -16384 ┤                                            
+ -20479 ┤                                            
+ -24575 ┤                                            
+ -28671 ┤                                            
+ -32767 ┤                                            
+           f = 2.000 kHz, A = 12800
+
+  32767 ┤                                            
+  28671 ┤                                            
+  24575 ┤  ╭╮          ╭╮          ╭╮          ╭╮    
+  20479 ┤ ╭╯╰╮        ╭╯╰╮        ╭╯╰╮        ╭╯╰╮   
+  16384 ┤ │  │        │  │        │  │        │  │   
+  12288 ┤╭╯  ╰╮      ╭╯  ╰╮      ╭╯  ╰╮      ╭╯  ╰╮  
+   8192 ┤│    │      │    │      │    │      │    │  
+   4096 ┤│    │      │    │      │    │      │    │  
+      0 ┼╯    ╰╮    ╭╯    ╰╮    ╭╯    ╰╮    ╭╯    ╰╮ 
+  -4096 ┤      │    │      │    │      │    │      │ 
+  -8192 ┤      │    │      │    │      │    │      │ 
+ -12288 ┤      ╰╮  ╭╯      ╰╮  ╭╯      ╰╮  ╭╯      ╰ 
+ -16384 ┤       │  │        │  │        │  │         
+ -20479 ┤       ╰╮╭╯        ╰╮╭╯        ╰╮╭╯         
+ -24575 ┤        ╰╯          ╰╯          ╰╯          
+ -28671 ┤                                            
+ -32767 ┤                                            
+           f = 3.500 kHz, A = 25600
+
+```
+
+You can find the complete example in [cmd/sine/main.go](./cmd/sine/main.go).
+This program plays a few random noises that sound a bit more pleasant that the previous square waves.
+
+#### [cmd/sine/main.go](./cmd/sine/main.go)
+
+```shell
+$ go run cmd/sine/main.go
+```
