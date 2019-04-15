@@ -241,13 +241,13 @@ func plot(freq float64, amplitude int16, duration time.Duration) string {
            f = 6.000 kHz, A = 25600
 ```
 
-You can find the complete example in [cmd/wave/main.go](./cmd/wave/main.go).
+You can find the complete example in [cmd/sqr/main.go](./cmd/sqr/main.go).
 This program plays a few random robot noises that could be sound effects from an old school Atari game.
 
-#### [cmd/wave/main.go](./cmd/wave/main.go)
+#### [cmd/sqr/main.go](./cmd/sqr/main.go)
 
 ```shell
-$ go run cmd/wave/main.go
+$ go run cmd/sqr/main.go
 ```
 
 ### 1.3 Pure Waves
