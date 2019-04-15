@@ -49,7 +49,7 @@ nBytes := sampleRate * 2
 buf := make([]byte, nBytes)
 ```
 
-One byte holds the value of one sample. This value can be in the range [0..255], so we can fill them with random data.
+Because the **bit depth** is 1 byte, each byte holds the value of one sample. This value can be in the range `[0x00..0xFF]`, so we can fill them with random data.
 
 ```go
 for i := 0; i < nBytes; i++ {
@@ -118,32 +118,45 @@ Y: Displacement of air molecules
 
 Knowing this we can create a function to oscillate the values of the PCM samples back and forth at a fixed rate, creating a square wave.
 The wave we are creating is a digital wave, so measurement of of the **amplitude** is not expressed in meters. Instead, it is a number of discrete steps.
-Because the bit depth is set to 8 bits, the value of each sample can range from 0 to 255. The middle point of the wave, or **equilibrium**, will be 127. This means the amplitude must have a value in the range [0..127].
+Because the **bit depth** will be set to 16 bits, the value of each sample can range from `-32768` to `32767`. The middle point of the wave, or **equilibrium**, will be `0`. This means the amplitude must have a value in the range `[0..32767]`.
 
 The function will simply divide the period _T_ in 2, and set `equilibrium + amplitude` or `equilibrium - amplitude`, depending on which half of the period the sample index falls on.
 
 ```go
 const (
 	sampleRate        = 44100
-	bitDepthInBytes   = 1
+	bitDepthInBytes   = 2
+
+	equilibrium int16 = 0
 )
 
-func sqrWave(freq, amplitude int, duration time.Duration) io.Reader {
-	const equilibrium = 127
+var max = int16((math.Pow(2, 8*bitDepthInBytes) - 1) / 2) // (2^16 - 1) / 2
 
-	samplesPeriod := sampleRate / freq
+func sqrWave(freq float64, amplitude int16, duration time.Duration) io.Reader {
+	if amplitude > max {
+		panic(fmt.Sprintf("wrong value %v for amplitude, max value is %v", amplitude, max))
+	}
+
+	samplesPeriod := int(sampleRate / freq)
 	samplesHalfPeriod := samplesPeriod / 2
 
-	nBytes := int(sampleRate * duration.Seconds())
+	nBytes := bitDepthInBytes * int(sampleRate*duration.Seconds())
 	buf := make([]byte, nBytes)
 
-	for i := 0; i < nBytes; i++ {
-		even := (i/samplesHalfPeriod)%2 == 0
+	for i := 0; i < nBytes; i += bitDepthInBytes {
+		pos := (i / bitDepthInBytes) % samplesPeriod
 
-		if even {
-			buf[i] = byte(equilibrium + amplitude)
+		var value int16
+		if pos <= samplesHalfPeriod {
+			value = equilibrium + amplitude
 		} else {
-			buf[i] = byte(equilibrium - amplitude)
+			value = equilibrium - amplitude
+		}
+
+		// little-endian
+		buf[i] = byte(value)
+		if bitDepthInBytes == 2 {
+			buf[i+1] = byte(value >> 8)
 		}
 	}
 
@@ -156,71 +169,76 @@ This `io.Reader` can be consumed by the `oto.Player` like this:
 ```go
 p, _ := oto.NewPlayer(sampleRate, channelNum, bitDepthInBytes, bufferSizeInBytes)
 
-io.Copy(p, sqrWave(600, 20, time.Second))
+io.Copy(p, sqrWave(600, 25600, time.Second))
 ```
 
 We can also print an ASCII graph of the sampled values using [github.com/guptarohit/asciigraph](https://github.com/guptarohit/asciigraph). Or, rather, [my fork](https://github.com/carlosms/asciigraph) that adds a couple of new options.
 
 ```go
-func plot(freq, amplitude int, duration time.Duration) string {
+func plot(freq float64, amplitude int16, duration time.Duration) string {
 	r := sqrWave(freq, amplitude, duration)
-	data, _ := ioutil.ReadAll(r)
-
-	var plotData []float64
-	for _, b := range data {
-		plotData = append(plotData, float64(b))
+	data, err := ioutil.ReadAll(r)
+	if err != nil {
+		panic(err)
 	}
 
-	caption := fmt.Sprintf("f = %d kHz, A = %d", freq/1000, amplitude)
+	var plotData []float64
+	for i := 0; i < len(data); i += bitDepthInBytes {
+		switch bitDepthInBytes {
+		case 1:
+			plotData = append(plotData, float64(data[i]))
+		case 2:
+			// little-endian
+			plotData = append(plotData, float64(int16(data[i])+int16(data[i+1])<<8))
+		}
+	}
+
+	caption := fmt.Sprintf("f = %.3f kHz, A = %d", freq/1000, amplitude)
 
 	return asciigraph.Plot(plotData,
 		asciigraph.Caption(caption),
-		asciigraph.Height(15), asciigraph.Min(0), asciigraph.Max(255))
-}
-
-func main() {
-	fmt.Println(plot(2000, 50, time.Millisecond))
-	fmt.Println()
-	fmt.Println(plot(6000, 100, time.Millisecond))
+		asciigraph.Height(15), asciigraph.Min(float64(-max)), asciigraph.Max(float64(max)))
 }
 ```
 
 ```
- 255 ┼                                            
- 238 ┤                                            
- 221 ┤                                            
- 204 ┤                                            
- 187 ┤                                            
- 170 ┼──────────╮          ╭──────────╮           
- 153 ┤          │          │          │           
- 136 ┤          │          │          │           
- 119 ┤          │          │          │           
- 102 ┤          │          │          │           
-  85 ┤          ╰──────────╯          ╰────────── 
-  68 ┤                                            
-  51 ┤                                            
-  34 ┤                                            
-  17 ┤                                            
-   0 ┤                                            
-        f = 2 kHz, A = 50
+  32767 ┤                                            
+  28671 ┤                                            
+  24575 ┤                                            
+  20479 ┤                                            
+  16384 ┤                                            
+  12288 ┼───────────╮         ╭───────────╮          
+   8192 ┤           │         │           │          
+   4096 ┤           │         │           │          
+      0 ┼           │         │           │          
+  -4096 ┤           │         │           │          
+  -8192 ┤           │         │           │          
+ -12288 ┤           ╰─────────╯           ╰───────── 
+ -16384 ┤                                            
+ -20479 ┤                                            
+ -24575 ┤                                            
+ -28671 ┤                                            
+ -32767 ┤                                            
+           f = 2.000 kHz, A = 12800
 
- 255 ┼                                            
- 238 ┤                                            
- 221 ┼──╮  ╭──╮  ╭──╮  ╭──╮  ╭──╮  ╭──╮  ╭──╮  ╭─ 
- 204 ┤  │  │  │  │  │  │  │  │  │  │  │  │  │  │  
- 187 ┤  │  │  │  │  │  │  │  │  │  │  │  │  │  │  
- 170 ┤  │  │  │  │  │  │  │  │  │  │  │  │  │  │  
- 153 ┤  │  │  │  │  │  │  │  │  │  │  │  │  │  │  
- 136 ┤  │  │  │  │  │  │  │  │  │  │  │  │  │  │  
- 119 ┤  │  │  │  │  │  │  │  │  │  │  │  │  │  │  
- 102 ┤  │  │  │  │  │  │  │  │  │  │  │  │  │  │  
-  85 ┤  │  │  │  │  │  │  │  │  │  │  │  │  │  │  
-  68 ┤  │  │  │  │  │  │  │  │  │  │  │  │  │  │  
-  51 ┤  │  │  │  │  │  │  │  │  │  │  │  │  │  │  
-  34 ┤  ╰──╯  ╰──╯  ╰──╯  ╰──╯  ╰──╯  ╰──╯  ╰──╯  
-  17 ┤                                            
-   0 ┤                                            
-        f = 6 kHz, A = 100
+  32767 ┤                                            
+  28671 ┤                                            
+  24575 ┼───╮  ╭───╮  ╭───╮  ╭───╮  ╭───╮  ╭───╮  ╭─ 
+  20479 ┤   │  │   │  │   │  │   │  │   │  │   │  │  
+  16384 ┤   │  │   │  │   │  │   │  │   │  │   │  │  
+  12288 ┤   │  │   │  │   │  │   │  │   │  │   │  │  
+   8192 ┤   │  │   │  │   │  │   │  │   │  │   │  │  
+   4096 ┤   │  │   │  │   │  │   │  │   │  │   │  │  
+      0 ┼   │  │   │  │   │  │   │  │   │  │   │  │  
+  -4096 ┤   │  │   │  │   │  │   │  │   │  │   │  │  
+  -8192 ┤   │  │   │  │   │  │   │  │   │  │   │  │  
+ -12288 ┤   │  │   │  │   │  │   │  │   │  │   │  │  
+ -16384 ┤   │  │   │  │   │  │   │  │   │  │   │  │  
+ -20479 ┤   │  │   │  │   │  │   │  │   │  │   │  │  
+ -24575 ┤   ╰──╯   ╰──╯   ╰──╯   ╰──╯   ╰──╯   ╰──╯  
+ -28671 ┤                                            
+ -32767 ┤                                            
+           f = 6.000 kHz, A = 25600
 ```
 
 You can find the complete example in [cmd/wave/main.go](./cmd/wave/main.go).
