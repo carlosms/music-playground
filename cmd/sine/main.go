@@ -34,9 +34,9 @@ func sineWave(freq float64, amplitude int16, duration time.Duration) io.Reader {
 	buf := make([]byte, nBytes)
 
 	for i := 0; i < nBytes; i += bitDepthInBytes {
-		pos := (i / bitDepthInBytes) % samplesPeriod
+		offset := (i / bitDepthInBytes)
 
-		radian := float64(pos) / float64(samplesPeriod) * 2 * math.Pi
+		radian := float64(offset) / float64(samplesPeriod) * 2 * math.Pi
 		value := equilibrium + int16(math.Round(float64(amplitude)*math.Sin(radian)))
 
 		// little-endian
