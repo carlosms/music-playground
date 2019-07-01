@@ -2,7 +2,7 @@
 
 This repository is a kind of notebook where I'll experiment programing music theory concepts from scratch, using Go.
 
-I am deliberately avoiding to use any code as reference for the implementation of a synthesizer, or musical notation. There might be better ways to implement music concepts, but the goal is for me to figure out how to achieve it.
+This is not supposed to be a tutorial, and I don't claim to have any authority in this subject. I am deliberately avoiding to use any code as reference for the implementation of a synthesizer, or musical notation. There might be better ways to implement music concepts, but the goal is for me to figure out how to achieve it.
 
 ## Table of Contents
 
@@ -11,6 +11,10 @@ I am deliberately avoiding to use any code as reference for the implementation o
   - [1.2 Beep Boop](#12-beep-boop)
   - [1.3 Pure Waves](#13-pure-waves)
   - [1.4 World's Smallest Synthesizer](#14-worlds-smallest-synthesizer)
+- [2 Noteworthy Theory](#2-noteworthy-theory)
+  - [2.1 Do, a Deer, a Female Deer](#21-do-a-deer-a-female-deer)
+    - [2.1.1 The Theory](#211-the-theory)
+    - [2.1.2 The Implementation](#212-the-implementation)
 
 ## 1 Let There Be Noise
 
@@ -757,4 +761,506 @@ You can find the complete example in [cmd/synth/main.go](./cmd/synth/main.go). I
 
 ```shell
 $ go run cmd/synth/main.go
+```
+
+## 2 Noteworthy Theory
+
+Now we have a way to create sounds with a certain **frequency**. To go into proper musical territory, let's start by creating **notes**.
+
+The notes names are **A, B, C, D, E, F, G** in English speaking countries. Or **Do, Re, Mi, Fa, Sol, La, Si** in many other countries.
+
+Let's start with the basics. According to [wikipedia](https://en.wikipedia.org/wiki/Musical_note):
+
+> In music, a **note** is the **pitch** and **duration** of a sound, and also its representation in musical notation (♪, ♩). A note can also represent a pitch class. Notes are the building blocks of much written music: discretizations of musical phenomena that facilitate performance, comprehension, and analysis.
+
+### 2.1 Do, a Deer, a Female Deer
+
+#### 2.1.1 The Theory
+
+The **pitch** of a note is, in practical terms, the same as the **frequency**, and is also measured in **hertz (Hz)**.
+
+The audible range of frequencies is around 20 Hz to 20 kHz. If we plot the frequency in a horizontal line, and pick any point, we could call it a **note**. In relation to this first note, any point in a lower pitch would be called a **lower** or **flatter** note, and any point with a higher pitch can be called a **higher** or **sharper** note.
+
+```
+lower pitch                                                         higher pitch
+──────────┬────────────────────────────────────┬─────────────────┬──────────────
+         note                                 note           also a note
+
+*linear scale
+```
+
+If we pick any note pitch **X**, and play it along another note with double its pitch (**2X**), they will feel very similar. In a way they feel like they are the same note, and these two points receive the same name. The distance between a note and another one with double its pitch is called an **octave**.
+
+The octaves below and above a note X can be visualized in a line like this:
+
+```
+  octave   octave
+      ◄--►◄------►◄--- octave ---►◄----------- octave -----------►
+...───┬───┬───────┬───────────────┬───────────────────────────────┬──────────...
+    1/8X  1/4X   1/2X             X                               2X            
+
+*linear scale
+```
+
+Now let's focus on any octave. Let's divide this interval into some notes. For historical reasons an octave gets divided into 12 notes, with equal distance between them. But, this "equal distance" is only equal on a logarithmic scale. If you take a look at the previous line, the width of each octave grows exponentially, and the same happens with the distance between notes within an octave.
+
+Since a note X and the next X have a ratio of 2:1 (octave), each one of the 12 notes has a ratio with the next one of 2<sup>1/12</sup>:1, or **<sup>12</sup>√2:1**.
+
+```
+   ◄------------------------------- octave -------------------------------►
+...┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─...
+   1     2     3     4     5     6     7     8     9     10    11    12    1    
+
+*logarithmic scale
+```
+
+The distance between any of these points is called a **semitone** or **half step**, and two semitones equal a whole **tone** or **step**. Using the labels above, 4 is one semitone above 3, and one tone above 2.
+
+But how do we match these 1 to 12 semitone labels to the note names, when we only have 7 names? That's because the note names are related to the **major scale**. Without going into details yet, a **scale** is a pattern to select some of the 12 semitones of an octave. For the major scale, the pattern is:
+
+```
+whole, whole, half, whole, whole, whole, half
+```
+
+Which means that from the starting point we pick the notes (1 to 12) one step higher, two steps higher, 2 and a half steps higher, and so on.
+
+```
+   ◄------------------------------- octave -------------------------------►
+...┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─...
+   │           │           │     │           │           │           │     │    
+   *           *           *     *           *           *           *     *    
+       whole       whole    half     whole       whole       whole    half
+
+*logarithmic scale
+```
+
+If we apply this pattern starting on the note **C** we get the **C major scale**. The notes of this scale are the ones that get assigned names:
+
+```
+   ◄------------------------------- octave -------------------------------►
+...┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─...
+   │           │           │     │           │           │           │     │    
+   C           D           E     F           G           A           B     C
+   Do          Re          Mi    Fa          Sol         La          Si    Do
+
+*logarithmic scale
+```
+
+As we can see between E and F there is one semitone, and between D and E a tone. The note one semitone above D is called **D♯** (D **sharp**) or **E♭** (E **flat**). Both names refer to the exact same note.
+
+These names use **accidentals**. An accidental is a symbol that modifies the pitch of a note:
+
+- **♯** (or #): **sharp**, means the note is one semitone higher in pitch.
+- **♭** (or b): **flat**, means the note is one semitone lower in pitch.
+- **♮**: **natural**, means the note uses its normal note pitch. Used to cancel previous accidentals only, doesn't need to be specified all the time.
+
+```
+   ◄------------------------------- octave -------------------------------►
+...┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─...
+   │           │           │     │           │           │           │     │    
+   C   C#/Db   D   D#/Eb   E     F   F#/Gb   G   G#/Ab   A   A#/Bb   B     C
+   Do  Do#/Reb Re  Re#/Mib Mi    Fa Fa#/Solb Sol Sol#/Lab La La#/Sib Si    Do
+
+*logarithmic scale
+```
+
+The previous graph with the C major scale corresponds to the piano keys. The white keys are the notes of the scale, and get natural names, and the black keys of the piano are the rest of the 12 notes, the sharps (or flats) of the white keys.
+
+```
+    C#  D#      F#  G#  A#      C#  D#
+    Db  Eb      Gb  Ab  Bb      Db  Eb
+║░░███░███░░║░░███░███░███░░║░░███░███░░║
+║░░███░███░░║░░███░███░███░░║░░███░███░░║
+║░░███░███░░║░░███░███░███░░║░░███░███░░║
+║░░███░███░░║░░███░███░███░░║░░███░███░░║
+║░░░║░░░║░░░║░░░║░░░║░░░║░░░║░░░║░░░║░░░║
+║░░░║░░░║░░░║░░░║░░░║░░░║░░░║░░░║░░░║░░░║
+║░░░║░░░║░░░║░░░║░░░║░░░║░░░║░░░║░░░║░░░║
+╚═══╩═══╩═══╩═══╩═══╩═══╩═══╩═══╩═══╩═══╝
+  C   D   E   F   G   A   B   C   D   E
+```
+
+Now let's see how we can calculate the exact frequency Hz values for each note. First, we need a better name for the note we want to know the exact pitch of.
+
+As we saw if we have a note X of a made up pitch of 100 Hz, the frequencies of 200 Hz, 400 Hz will also get the same note name. To differentiate we use the scientific pitch notation, which combines the note name with its octave, starting with C0.
+
+```
+-- octave 2 --►◄------------------ octave 3 ------------------►◄--- octave 4 ---
+...┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬───┬─...
+   A2  A#2 B2  C3  C#3 D3  D#3 E3  F3  F#3 G3  G#3 A3  A#3 B3  C4  C#4 D4  D#4
+
+*logarithmic scale
+```
+
+In this tuning system the reference point from where all the other notes are calculated is **A4**, with a standardized value of **440 Hz**.
+
+From A4 we can obtain the values of the other notes by applying the ratio of **<sup>12</sup>√2:1** for each semitone of distance.
+
+```
+n = number of semitones between the note and A4
+pitch = 440 * 2^(n/12)
+```
+
+For example, B4 is 2 semitones above A4:
+
+```
+n = 2
+B4 = 440 * 2^(2/12) = 493.88 Hz
+```
+
+C4 is 9 semitones below A4:
+
+```
+n = -9
+C4 = 440 * 2^(-9/12) = 261.62 Hz
+```
+
+But why this ratio?
+
+The same way a note C4 and the next C5 have a ratio of 2:1 (octave), there are other ratios that produce notes that sound good together. For example 3:2 (perfect fifth), 4:3 (perfect fourth), 5:4 (major third).
+
+A tuning system with these exact ratios, named **just intonation**, comes with a few practical difficulties. An alternative is an equal temperament system, in which each adjacent note interval has the same ratio. For historical reasons the most common tuning system in western music today is the **12-tone equal temperament**, or 12-TET.
+
+In 12-TET an octave gets divided into 12 notes, with equal (logarithmic) distance between them. While 12-TET creates intervals that are not _exactly_ those nice whole number ratios, in practice the approximations are so close that the difference is hard to notice.
+
+For example the perfect fifth of C is G. In just intonation G would be an interval of 3/2 = 1.5 times the pitch of C.
+With 12-TET the interval is 2<sup>​7/12</sup> = 1.498307
+
+| | 12-TET Ratio | 12-TET decimal | Just intonation ratio | Just intonation decimal |
+| --- | --- | --- | --- | --- |
+| Perfect fifth | 2<sup>​7/12</sup> | 1.498307 | 3/2 | 1.5 |
+
+So equal temperament allows to have notes close enough to the ideal ratios, while solving many practical problems of just intonation tuning.
+
+#### 2.1.2 The Implementation
+
+The easiest way to code all the pitches would be to have a list of all the names with their frequency in Hz. Something like:
+
+```go
+const (
+	// ...
+	C4      float64 = 261.63
+	Csharp4 float64 = 277.18
+	D4      float64 = 293.66
+	Dsharp4 float64 = 311.13
+	// ...
+)
+```
+
+But I'd like to to some operations over the note pitches, things like `C4 + Octave == C5`. So I will assign a sequential int value to each pitch.
+
+This sequence could start at any point, for example it would make sense to make C0 the first element:
+
+```
+C0  = 0
+C#0 = 1
+...
+```
+
+Or follow the nomenclature of an 88 key piano, and start with:
+
+```
+A0  = 0
+A#0 = 1
+...
+```
+
+But there is already an standard for this: MIDI (Musical Instrument Digital Interface). In MIDI 1.0 instrument keys are defined with 8-bit numbers from 0 to 127. The convention is that A4 is the MIDI key 69. This means the first key is actually below the octave 0, it starts on C-1 and ends in G9:
+
+```
+C-1  = 0
+C#-1 = 1
+D-1  = 2
+...
+G#4  = 68
+A4   = 69
+A#4  = 70
+...
+F9   = 125
+F#9  = 126
+G9   = 127
+```
+
+Taking this into account the code in Go could look like this:
+
+```go
+package note
+
+// Note is a musical pitch and duration
+type Note struct {
+	Pitch Pitch
+	// Duration NoteDuration
+}
+
+// Interval is the distance between pitches, measured in semitones
+type Interval = uint8
+
+const (
+	// Semitone is the smallest interval between pitches, a 12th of an octave
+	Semitone Interval = 1
+	// Tone is 2 semitones
+	Tone Interval = 2
+	// Octave is the distance between a pitch and another with double frequency
+	Octave Interval = 12
+)
+
+// Pitch represents a musical frequency
+type Pitch uint8
+
+func (p Pitch) String() string {
+	return pitchValues[p].name
+}
+
+func (p Pitch) Frequency() float64 {
+	return pitchValues[p].frequency
+}
+
+func (p Pitch) Add(i Interval) Pitch {
+	return Pitch(uint8(p) + uint8(i))
+}
+
+func (p Pitch) Subtract(i Interval) Pitch {
+	return Pitch(uint8(p) - uint8(i))
+}
+
+const (
+	...
+	G4       Pitch = 67
+	Gsharp4  Pitch = 68
+	A4       Pitch = 69
+	...
+)
+
+
+var pitchValues = map[Pitch]struct {
+	name      string
+	frequency float64
+}{
+	...
+	G4:       {"G4", 391.99},
+	Gsharp4:  {"G#4", 415.30},
+	A4:       {"A4", 440},
+	...
+}
+```
+
+But copying all the values can be tedious. Why would you spend 2 minutes on a tedious task if you can spend 2 hours automating it? Obviously this needs some code generation to make it more interesting.
+
+Using `go generate` is easy. First, let's put the previous type definitions without any of the pitch values in [./theory/note/note.go](./theory/note/note.go).
+
+Then we need to add the `go:generate` keyword:
+
+```go
+// Package note contains types to manage musical notes
+package note
+
+//go:generate go run ../../gen/main.go
+```
+
+Now we need a Go program that will generate all the pitches automatically and place them in a new [./theory/note/pitch.go](./theory/note/pitch.go) file.
+
+This text template will become the `pitch.go` file:
+
+```go
+var tpl = template.Must(template.New("").Parse(`// Code generated by go generate; DO NOT EDIT.
+package note
+
+const (
+{{- range .Notes}}
+	{{ printf "%-8v Pitch = %v" .VarName .KeyNumber }}
+{{- end}}
+)
+
+var pitchValues = map[Pitch]struct {
+	name      string
+	frequency float64
+}{
+{{- range .Notes}}
+	{{ printf "%-9v {%q, %v}," (printf "%v:" .VarName) .Name .Freq }}
+{{- end}}
+}
+`))
+```
+
+To fill this template we will need to provide `Notes`, an array of this struct type:
+
+```go
+	type note struct {
+		VarName   string
+		Name      string
+		KeyNumber int
+		Freq      float64
+	}
+```
+
+Now comes the interesting part. We need 128 of those `notes`. As we have seen in the previous section, the frequency of any note can be calculated from the reference frequency of A4 = 440 Hz.
+
+```go
+	for i := 0; i <= 127; i++ {
+		// MIDI key 69 is used for A4, 440 Hz in standard tuning
+		// If n = number of semitones between the note and A4
+		// then pitch = 440 * 2^(n/12)
+		distance := float64(i) - 69
+		freq := 440 * math.Pow(2, (distance/12))
+
+		// ...
+	}
+```
+
+As for the names, they can be built from the list of note names + the octave number. This will require some cleaning to have nice printable names and valid variable names.
+
+```go
+// sanitizeVarName replaces forbidden characters for variable names, e.g.
+// A#4 => Asharp4; C-1 => C_1
+func sanitizeVarName(name string) string {
+	return strings.Replace(
+		strings.Replace(name, "#", "sharp", 1),
+		"-1", "_1", 1)
+}
+
+func main() {
+	var names = []string{
+		"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"}
+
+	for i := 0; i <= 127; i++ {
+		octave := int(i/12) - 1
+		name := names[i%12] + strconv.Itoa(octave)
+
+		// ...
+
+		notes = append(notes, note{
+			VarName:   sanitizeVarName(name),
+			Name:      name,
+			KeyNumber: i,
+			Freq:      freq,
+		})
+	}
+}
+```
+
+You can see all parts put together in
+
+##### [gen/main.go](./gen/main.go)
+
+And after running `go generate`
+
+```shell
+$ go generate ./theory/note/
+```
+
+The resulting file gets generated in
+
+##### [theory/note/pitch.go](./theory/note/pitch.go)
+
+This `Pitch` type can be used in a sample command that takes [cmd/synth/main.go](./cmd/synth/main.go) and extends it to build chords using this new `theory/note` package.
+
+```go
+func majorScale(n note.Pitch) []note.Pitch {
+	// whole, whole, half, whole, whole, whole, half
+	scale := make([]note.Pitch, 8)
+	scale[0] = n
+	scale[1] = scale[0].Add(note.Tone)
+	scale[2] = scale[1].Add(note.Tone)
+	scale[3] = scale[2].Add(note.Semitone)
+	scale[4] = scale[3].Add(note.Tone)
+	scale[5] = scale[4].Add(note.Tone)
+	scale[6] = scale[5].Add(note.Tone)
+	scale[7] = scale[6].Add(note.Semitone)
+
+	return scale
+}
+
+func majorChord(n note.Pitch) []note.Pitch {
+	scale := majorScale(n)
+	return []note.Pitch{scale[0], scale[2], scale[4]}
+}
+
+func play(wave synth.WaveGenerator, triad []note.Pitch) io.Reader {
+	return synth.Combine(
+		synth.Sustain(wave(sampleRate, triad[0].Frequency(), 1*time.Second), 0.2),
+		// ...
+	)
+}
+
+func main() {
+	// ...
+
+	pitch := note.C3
+
+	for i := uint8(0); i < 3; i++ {
+		triad := majorChord(pitch.Add(i * note.Octave))
+		plotChord(synth.NewSineWave, triad)
+
+		sound := play(synth.NewSineWave, triad)
+
+		// ...
+	}
+}
+```
+
+You can find the complete example in [cmd/pitch/main.go](./cmd/pitch/main.go). When you run it, it plays the C major chord in 3 different octaves.
+
+##### [cmd/pitch/main.go](./cmd/pitch/main.go)
+
+```shell
+$ go run cmd/pitch/main.go
+```
+
+```
+  32767 ┤                                                                                           
+  28671 ┤      ╭╮                                                                                   
+  24575 ┤    ╭─╯╰╮                                                                                  
+  20479 ┤   ╭╯   ╰─╮                                                                                
+  16384 ┤  ╭╯      │                                                                                
+  12288 ┤ ╭╯       ╰╮                                                                               
+   8192 ┤╭╯         ╰╮               ╭──────╮                                   ╭─────╮             
+   4096 ┤│           ╰╮             ╭╯      ╰──╮        ╭─────╮               ╭─╯     ╰──╮          
+      0 ┼╯            │            ╭╯          ╰────────╯     ╰──╮          ╭─╯          ╰────╮ ╭── 
+  -4096 ┤             ╰╮          ╭╯                             ╰─╮      ╭─╯                 ╰─╯   
+  -8192 ┤              ╰╮        ╭╯                                ╰──────╯                         
+ -12288 ┤               ╰╮     ╭─╯                                                                  
+ -16384 ┤                ╰╮   ╭╯                                                                    
+ -20479 ┤                 ╰───╯                                                                     
+ -24575 ┤                                                                                           
+ -28671 ┤                                                                                           
+ -32767 ┤                                                                                           
+           C3,E3,G3. Scale 0.10x
+
+  32767 ┤                                                                                           
+  28671 ┤                                                                                           
+  24575 ┤  ╭─╮                                                                ╭─╮                   
+  20479 ┤ ╭╯ │                                                   ╭╮          ╭╯ │                   
+  16384 ┤ │  ╰╮                                                 ╭╯╰╮         │  ╰╮                  
+  12288 ┤╭╯   │                                                ╭╯  ╰╮       ╭╯   │         ╭╮       
+   8192 ┤│    ╰╮       ╭──╮                 ╭──╮               │    │       │    ╰╮       ╭╯╰╮      
+   4096 ┤│     │      ╭╯  ╰─╮   ╭──╮       ╭╯  ╰─╮            ╭╯    ╰╮      │     │      ╭╯  ╰╮     
+      0 ┼╯     │      │     ╰───╯  ╰╮     ╭╯     ╰─────╮      │      │     ╭╯     │     ╭╯    ╰╮  ╭ 
+  -4096 ┤      ╰╮    ╭╯             ╰─╮  ╭╯            ╰─╮   ╭╯      │     │      ╰╮    │      ╰──╯ 
+  -8192 ┤       │    │                ╰──╯               ╰───╯       ╰╮    │       │   ╭╯           
+ -12288 ┤       ╰╮  ╭╯                                                │   ╭╯       ╰╮  │            
+ -16384 ┤        │ ╭╯                                                 │   │         │ ╭╯            
+ -20479 ┤        ╰─╯                                                  ╰╮ ╭╯         ╰─╯             
+ -24575 ┤                                                              ╰─╯                          
+ -28671 ┤                                                                                           
+ -32767 ┤                                                                                           
+           C4,E4,G4. Scale 0.10x
+
+  32767 ┤                                                                                           
+  28671 ┤                                                                                           
+  24575 ┤ ╭╮                               ╭╮                                                       
+  20479 ┤╭╯│                               ││                               ╭─╮                     
+  16384 ┤│ │                        ╭─╮    │╰╮                        ╭╮    │ │               ╭╮    
+  12288 ┤│ │                        │ │   ╭╯ │   ╭╮         ╭─╮      ╭╯│    │ │         ╭╮    │╰╮   
+   8192 ┤│ ╰╮   ╭╮        ╭─╮       │ │   │  │   │╰╮  ╭─╮   │ │      │ ╰╮   │ │   ╭─╮  ╭╯│   ╭╯ │   
+   4096 ┤│  │  ╭╯╰╮ ╭─╮   │ ╰╮     ╭╯ │   │  │   │ │  │ │   │ ╰╮    ╭╯  │  ╭╯ ╰╮  │ │  │ ╰╮  │  │   
+      0 ┼╯  │  │  ╰─╯ ╰╮ ╭╯  ╰╮    │  ╰╮  │  │  ╭╯ │ ╭╯ │  ╭╯  │    │   │  │   │  │ │  │  │  │  ╰╮  
+  -4096 ┤   │  │       │ │    ╰──╮╭╯   │  │  │  │  ╰─╯  ╰╮ │   ╰╮  ╭╯   │  │   │ ╭╯ ╰╮╭╯  │  │   │  
+  -8192 ┤   │ ╭╯       ╰─╯       ╰╯    │ ╭╯  ╰╮ │        │ │    ╰──╯    │  │   │ │   ╰╯   │ ╭╯   ╰╮ 
+ -12288 ┤   ╰╮│                        │ │    │╭╯        ╰─╯            ╰╮ │   │ │        ╰╮│     ╰ 
+ -16384 ┤    ││                        │ │    ││                         │╭╯   ╰─╯         ││       
+ -20479 ┤    ╰╯                        ╰╮│    ╰╯                         ╰╯                ╰╯       
+ -24575 ┤                               ╰╯                                                          
+ -28671 ┤                                                                                           
+ -32767 ┤                                                                                           
+           C5,E5,G5. Scale 0.10x
 ```
