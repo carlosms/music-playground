@@ -456,7 +456,7 @@ There is a reason why this `Reader` is called `Sustain` and not `Volume` or `Amp
 
 - _* In Spanish there is an idiom for "abrir un melón"/"to open a melon" that roughly translates to "open a can of worms"_
 
-In previous examples we used an `io.MultiReader` to concatenate `io.Readers`, playing one sound wave after the other. So we could say the code was a **monophonic** synthesizer, able to play one note at a time. Making **polyphonic** music much more fun, so let's also have some code to mix different samples.
+In previous examples we used an `io.MultiReader` to concatenate `io.Readers`, playing one sound wave after the other. So we could say the code was a **monophonic** synthesizer, able to play one note at a time. Making **polyphonic** music is much more fun, so let's also have some code to mix different samples.
 
 The PCM library used, [Oto](https://github.com/hajimehoshi/oto), already supports sending samples simultaneously. So we could be playing different sounds from a few goroutines. But having having my own function to mix the samples coming from different `io.Readers` will allow me to be more independent of the PCM library. This could be used in the future for example to save the final mixed samples into a sound file.
 
