@@ -1,4 +1,4 @@
-// This program generates pitch.go. It can be invoked by running
+// This program generates frequencies.go. It can be invoked by running
 // go generate ./theory/note/
 package main
 
@@ -19,7 +19,7 @@ func sanitizeVarName(name string) string {
 }
 
 func main() {
-	f, err := os.Create("./pitch.go")
+	f, err := os.Create("./frequencies.go")
 	if err != nil {
 		panic(err)
 	}
