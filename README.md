@@ -15,6 +15,7 @@ This is not supposed to be a tutorial, and I don't claim to have any authority i
   - [2.1 Do, a Deer, a Female Deer](#21-do-a-deer-a-female-deer)
     - [2.1.1 The Theory](#211-the-theory)
     - [2.1.2 The Implementation](#212-the-implementation)
+  - [2.2 Pata-Pata-Pata-Pon](#22-pata-pata-pata-pon)
 
 ## 1 Let There Be Noise
 
@@ -988,8 +989,8 @@ package note
 
 // Note is a musical pitch and duration
 type Note struct {
-	Pitch Pitch
-	// Duration NoteDuration
+	Pitch
+	// Duration
 }
 
 // Interval is the distance between pitches, measured in semitones
@@ -1264,3 +1265,194 @@ $ go run cmd/pitch/main.go
  -32767 ┤                                                                                           
            C5,E5,G5. Scale 0.10x
 ```
+
+### 2.2 Pata-Pata-Pata-Pon
+
+Now that the `Note` contains a `Pitch`, it's time to add the missing half: **duration**.
+
+The **duration** defines how long a note is to be played. But this duration is not measured in seconds, instead the note symbols are relative to the **whole note**.
+
+| Note | Name | Relative value |
+| ---- | ---- | -------------- |
+| 𝅜 | Double note / breve |  2 |
+| 𝅝 | Whole note / semibreve |  1 |
+| 𝅗𝅥 | Half note / minim |  1/2 |
+| ♩ | Quarter note / crotchet |  1/4 |
+| ♪ | Eighth note / quaver |  1/8 |
+| 𝅘𝅥𝅯 | Sixteenth note / semiquaver | 1/16 |
+
+So the duration in seconds of any note can be calculated once we know the value for a whole note. In order to do that, we need to talk about the **staff** and **tempo**
+
+A **staff** (or **stave**) is the group of five lines where the note symbols are placed. The piece of music written in the **staff** gets divided into uniform sections called **bars** (or **measures**).
+
+A **time signature** (or **meter signature**) is placed the start of a **staff** for a piece of music, consisting of 2 numbers, one on top of each other. The top number indicates how many **beats** there are in each **bar**, and the lower number indicates the note equivalent to each **beat**.
+
+For example:
+- (⁴₄) means that in each bar there are 4 beats, and each beat corresponds to a quarter note (1/4)
+- (³₈) means that in each bar there are 3 beats, and each beat corresponds to an eighth note (1/8)
+
+A **staff** will also contain a **tempo**, measured in **bpm (beats per minute)**. This defines the speed of the piece of music.
+
+The **bpm** gives us how many beats there are in a minute, and the lower number of the **time signature** defines what note is equivalent to a beat. Knowing this we can calculate the length of a note in seconds.
+
+For example, if we have a (⁴₄) signature and 120 bpm, and we want to know the length of a sixteenth note:
+
+![score](./doc/tempo.png)
+
+- 60 seconds per minute / 120 beats per minute = 0.5 **seconds per beat**
+- Per the time signature, a **quarter note** (1/4) is a beat, so 1/4 of a note is 0.5 seconds
+- 0.5 seconds per beat / (1/4) note per beat = 2 **seconds per whole note**
+- 2 seconds per whole note * (1/16) of a note = 0.125 **seconds per sixteenth note**
+
+```go
+package note
+
+// Duration is the duration relative to the whole note
+type Duration float64
+
+const (
+	// Double is 𝅜
+	Double Duration = 2
+	// Whole is 𝅝
+	Whole Duration = 1
+	// Half is 𝅗𝅥
+	Half Duration = 0.5
+	// Quarter is ♩
+	Quarter Duration = 0.25
+	// Eighth is ♪
+	Eighth Duration = 0.125
+	// Sixteenth is 𝅘𝅥𝅯
+	Sixteenth Duration = 0.0625
+)
+
+// ToSeconds returns the note value as time.Duration. tempoNote is the note in
+// the tempo marking, or the _beat_ in _beats per minute_.
+func (d Duration) ToSeconds(tempoNote Duration, bpm int) time.Duration {
+	// duration for each tempoNote
+	timeBeat := float64(time.Minute) / float64(bpm)
+	// convert to the d note value
+	t := float64(d) * (timeBeat / float64(tempoNote))
+
+	return time.Duration(t)
+}
+
+// String returns the musical note symbol
+func (d Duration) String() string {
+	switch d {
+	case Double:
+		return "𝅜"
+	case Whole:
+		return "𝅝"
+	case Half:
+		return "𝅗𝅥"
+	case Quarter:
+		return "♩"
+	case Eighth:
+		return "♪"
+	case Sixteenth:
+		return "𝅘𝅥𝅯"
+	default:
+		var s string
+		f := float64(d)
+		if f < 1 {
+			s = fmt.Sprintf("1/%v note", 1/f)
+		} else {
+			s = fmt.Sprintf("%v note", f)
+		}
+		return s
+	}
+}
+```
+
+```go
+func TestToSeconds(t *testing.T) {
+	n := note.Note{Duration: note.Quarter}
+
+	assert.Equal(t, 500*time.Millisecond, n.ToSeconds(note.Quarter, 120))
+	assert.Equal(t, time.Second, n.ToSeconds(note.Eighth, 120))
+	assert.Equal(t, 250*time.Millisecond, n.ToSeconds(note.Half, 120))
+}
+```
+
+You can find the complete code in [./theory/note/duration.go](./theory/note/duration.go), and the tests to verify that everything works as it should in [./theory/note/duration_test.go](./theory/note/duration_test.go)
+
+In `note.go`, the code relative to intervals and pitch gets moved to [./theory/note/pitch.go](./theory/note/pitch.go). And now `Note` can be a `Pitch` plus a `Duration`:
+
+```go
+// Note is a musical Pitch and Duration
+type Note struct {
+	Pitch
+	Duration
+}
+
+// NewNote creates a new musical Note
+func NewNote(p Pitch, d Duration) Note {
+	return Note{
+		Pitch:    p,
+		Duration: d,
+	}
+}
+
+// String returns a human readable representation of this note
+func (n Note) String() string {
+	return fmt.Sprintf("%v %v", n.Duration, n.Pitch)
+}
+
+// Add returns a new Note adding an interval to this note's pitch, making it higher
+func (n Note) Add(i Interval) Note {
+	return Note{
+		Pitch:    n.Pitch.Add(i),
+		Duration: n.Duration,
+	}
+}
+
+// Subtract returns a new Note subtracting an interval to this note's pitch, making it lower
+func (n Note) Subtract(i Interval) Note {
+	return Note{
+		Pitch:    n.Pitch.Subtract(i),
+		Duration: n.Duration,
+	}
+}
+```
+
+And can be used like this:
+
+```go
+func TestNoteString(t *testing.T) {
+	n := note.NewNote(note.Fsharp5, note.Quarter)
+
+	assert.Equal(t, "♩ F#5", fmt.Sprint(n))
+	assert.Equal(t, "♩ F#5", n.String())
+}
+
+func TestNoteFrequency(t *testing.T) {
+	n := note.NewNote(note.C4, note.Half)
+
+	assert.Equal(t, 261.6255653005986, n.Frequency())
+
+	c5 := n.Add(note.Octave)
+	assert.Equal(t, 523.2511306011972, c5.Frequency())
+	assert.Equal(t, note.Half, c5.Duration)
+
+	a3 := n.Subtract(note.Tone + note.Semitone)
+	assert.Equal(t, 220.0, a3.Frequency())
+	assert.Equal(t, note.Half, a3.Duration)
+}
+
+func TestNoteDuration(t *testing.T) {
+	n := note.NewNote(note.C4, note.Half)
+	assert.Equal(t, note.Half, n.Duration)
+
+	shorter := n
+	shorter.Duration /= 2
+	assert.Equal(t, n.Frequency(), shorter.Frequency())
+	assert.Equal(t, note.Quarter, shorter.Duration)
+
+	longer := n
+	longer.Duration *= 2
+	assert.Equal(t, n.Frequency(), longer.Frequency())
+	assert.Equal(t, note.Whole, longer.Duration)
+}
+```
+
+You can find the complete code in [./theory/note/note.go](./theory/note/note.go), and the tests for it in [./theory/note/note_test.go](./theory/note/note_test.go)

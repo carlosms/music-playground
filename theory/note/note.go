@@ -1,40 +1,40 @@
 package note
 
-//go:generate go run ../../gen/main.go
-
-// Note is a musical pitch and duration
-type Note struct {
-	Pitch Pitch
-	// Duration NoteDuration
-}
-
-// Interval is the distance between pitches, measured in semitones
-type Interval = uint8
-
-const (
-	// Semitone is the smallest interval between pitches, a 12th of an octave
-	Semitone Interval = 1
-	// Tone is 2 semitones
-	Tone Interval = 2
-	// Octave is the distance between a pitch and another with double frequency
-	Octave Interval = 12
+import (
+	"fmt"
 )
 
-// Pitch represents a musical frequency
-type Pitch uint8
-
-func (p Pitch) String() string {
-	return pitchValues[p].name
+// Note is a musical Pitch and Duration
+type Note struct {
+	Pitch
+	Duration
 }
 
-func (p Pitch) Frequency() float64 {
-	return pitchValues[p].frequency
+// NewNote creates a new musical Note
+func NewNote(p Pitch, d Duration) Note {
+	return Note{
+		Pitch:    p,
+		Duration: d,
+	}
 }
 
-func (p Pitch) Add(i Interval) Pitch {
-	return Pitch(uint8(p) + uint8(i))
+// String returns a human readable representation of this note
+func (n Note) String() string {
+	return fmt.Sprintf("%v %v", n.Duration, n.Pitch)
 }
 
-func (p Pitch) Subtract(i Interval) Pitch {
-	return Pitch(uint8(p) - uint8(i))
+// Add returns a new Note adding an interval to this note's pitch, making it higher
+func (n Note) Add(i Interval) Note {
+	return Note{
+		Pitch:    n.Pitch.Add(i),
+		Duration: n.Duration,
+	}
+}
+
+// Subtract returns a new Note subtracting an interval to this note's pitch, making it lower
+func (n Note) Subtract(i Interval) Note {
+	return Note{
+		Pitch:    n.Pitch.Subtract(i),
+		Duration: n.Duration,
+	}
 }
