@@ -15,6 +15,27 @@ func TestNoteString(t *testing.T) {
 	assert.Equal(t, "♩ F#5", n.String())
 }
 
+func TestRestString(t *testing.T) {
+	n := note.NewRest(note.Eighth)
+
+	assert.Equal(t, "𝄾", fmt.Sprint(n))
+	assert.Equal(t, "𝄾", n.String())
+
+	n = note.NewRest(note.Half)
+	assert.Equal(t, "𝄼", fmt.Sprint(n))
+	assert.Equal(t, "𝄼", n.String())
+
+	n = note.NewRest(note.Sixteenth / 2)
+	assert.Equal(t, "1/32 rest", fmt.Sprint(n))
+	assert.Equal(t, "1/32 rest", n.String())
+
+	n = note.NewRest(note.Whole * 4)
+	assert.Equal(t, "4 rest", fmt.Sprint(n))
+	assert.Equal(t, "4 rest", n.String())
+
+	assert.Equal(t, "", n.Pitch.String())
+}
+
 func TestNoteFrequency(t *testing.T) {
 	n := note.NewNote(note.C4, note.Half)
 
@@ -42,4 +63,31 @@ func TestNoteDuration(t *testing.T) {
 	longer.Duration *= 2
 	assert.Equal(t, n.Frequency(), longer.Frequency())
 	assert.Equal(t, note.Whole, longer.Duration)
+}
+
+func TestRestFrequency(t *testing.T) {
+	n := note.NewRest(note.Sixteenth)
+
+	assert.Equal(t, 0.0, n.Frequency())
+
+	higher := n.Add(note.Octave)
+	assert.Equal(t, 0.0, higher.Frequency())
+
+	lower := n.Subtract(note.Tone + note.Semitone)
+	assert.Equal(t, 0.0, lower.Frequency())
+}
+
+func TestRestDuration(t *testing.T) {
+	n := note.NewRest(note.Whole)
+	assert.Equal(t, note.Whole, n.Duration)
+
+	shorter := n
+	shorter.Duration /= 2
+	assert.Equal(t, n.Frequency(), shorter.Frequency())
+	assert.Equal(t, note.Half, shorter.Duration)
+
+	longer := n
+	longer.Duration *= 2
+	assert.Equal(t, n.Frequency(), longer.Frequency())
+	assert.Equal(t, note.Double, longer.Duration)
 }

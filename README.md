@@ -16,6 +16,7 @@ This is not supposed to be a tutorial, and I don't claim to have any authority i
     - [2.1.1 The Theory](#211-the-theory)
     - [2.1.2 The Implementation](#212-the-implementation)
   - [2.2 Pata-Pata-Pata-Pon](#22-pata-pata-pata-pon)
+  - [2.3 The Sound... of Silence](#23-the-sound-of-silence)
 
 ## 1 Let There Be Noise
 
@@ -1272,14 +1273,14 @@ Now that the `Note` contains a `Pitch`, it's time to add the missing half: **dur
 
 The **duration** defines how long a note is to be played. But this duration is not measured in seconds, instead the note symbols are relative to the **whole note**.
 
-| Note | Name | Relative value |
-| ---- | ---- | -------------- |
-| 𝅜 | Double note / breve |  2 |
-| 𝅝 | Whole note / semibreve |  1 |
-| 𝅗𝅥 | Half note / minim |  1/2 |
-| ♩ | Quarter note / crotchet |  1/4 |
-| ♪ | Eighth note / quaver |  1/8 |
-| 𝅘𝅥𝅯 | Sixteenth note / semiquaver | 1/16 |
+| Note | Name                        | Relative value |
+| ---- | --------------------------- | -------------- |
+| 𝅜    | Double note / breve         | 2              |
+| 𝅝    | Whole note / semibreve      | 1              |
+| 𝅗𝅥    | Half note / minim           | 1/2            |
+| ♩    | Quarter note / crotchet     | 1/4            |
+| ♪    | Eighth note / quaver        | 1/8            |
+| 𝅘𝅥𝅯    | Sixteenth note / semiquaver | 1/16           |
 
 So the duration in seconds of any note can be calculated once we know the value for a whole note. In order to do that, we need to talk about the **staff** and **tempo**
 
@@ -1456,3 +1457,170 @@ func TestNoteDuration(t *testing.T) {
 ```
 
 You can find the complete code in [./theory/note/note.go](./theory/note/note.go), and the tests for it in [./theory/note/note_test.go](./theory/note/note_test.go)
+
+### 2.3 The Sound... of Silence
+
+There is something missing in the implementation of musical notes so far. There is no way to define a **rest**.
+
+A **rest** is a symbol that defines an interval of silence, with a length corresponding to a note name.
+
+| Note | Name | Relative value |
+| ---- | ---- | -------------- |
+| 𝄺 | Double rest / breve rest         | 2    |
+| 𝄻 | Whole rest / semibreve rest      | 1    |
+| 𝄼 | Half rest / minim rest           | 1/2  |
+| 𝄽 | Quarter rest / crotchet rest     | 1/4  |
+| 𝄾 | Eighth rest / quaver rest        | 1/8  |
+| 𝄿 | Sixteenth rest / semiquaver rest | 1/16 |
+
+Adding support this this in `duration.go` is simple, we only have to account for the different string representation, since the length in seconds is calculated the same way.
+
+```go
+// Duration is the duration relative to the whole note
+type Duration float64
+
+const (
+	// Double is 𝅜
+	Double Duration = 2
+	// Whole is 𝅝
+	Whole Duration = 1
+	// Half is 𝅗𝅥
+	Half Duration = 0.5
+	// Quarter is ♩
+	Quarter Duration = 0.25
+	// Eighth is ♪
+	Eighth Duration = 0.125
+	// Sixteenth is 𝅘𝅥𝅯
+	Sixteenth Duration = 0.0625
+)
+
+// ToSeconds returns the note value as time.Duration. tempoNote is the note in
+// the tempo marking, or the _beat_ in _beats per minute_.
+func (d Duration) ToSeconds(tempoNote Duration, bpm int) time.Duration {
+	...
+}
+
+// String returns the musical note symbol
+func (d Duration) String() string {
+	...
+}
+
+// StringRest returns the rest note symbol
+func (d Duration) StringRest() string {
+	switch d {
+	case Double:
+		return "𝄺"
+	case Whole:
+		return "𝄻"
+	case Half:
+		return "𝄼"
+	case Quarter:
+		return "𝄽"
+	case Eighth:
+		return "𝄾"
+	case Sixteenth:
+		return "𝄿"
+	default:
+		var s string
+		f := float64(d)
+		if f < 1 {
+			s = fmt.Sprintf("1/%v rest", 1/f)
+		} else {
+			s = fmt.Sprintf("%v rest", f)
+		}
+		return s
+	}
+}
+```
+
+But how to represent a generic thing that can be a note or a rest? I opted to rename the previous `note.Pitch` type to `note.pitchValue`, create a new `note.restPitch`, and extract the methods to a `note.Pitch` interface. So a `Note` will contain a `Pitch`, that will be initialized to either a **pitch** or a **rest**.
+
+```go
+// Note is a musical Pitch and Duration
+type Note struct {
+	Pitch
+	Duration
+}
+
+// NewNote creates a new musical Note
+func NewNote(p Pitch, d Duration) Note {
+	return Note{
+		Pitch:    p,
+		Duration: d,
+	}
+}
+
+// NewNote creates a new musical Note
+func NewNote(p Pitch, d Duration) Note {
+	return Note{
+		Pitch:    p,
+		Duration: d,
+	}
+}
+
+// NewRest creates a new rest Note
+func NewRest(d Duration) Note {
+	return Note{
+		Pitch:    restPitch{},
+		Duration: d,
+	}
+}
+
+// Pitch is an interface for a note musical frequency
+type Pitch interface {
+	// String returns a human readable name for this pitch
+	String() string
+	// Frequency returns the hertz value for this pitch
+	Frequency() float64
+	// Add returns a new Pitch adding an interval to this pitch, making it higher
+	Add(i Interval) Pitch
+	// Subtract returns a new Pitch subtracting an interval to this pitch, making it lower
+	Subtract(i Interval) Pitch
+}
+
+// restPitch represents the (absence of) musical frequency for a rest note
+type restPitch struct{}
+
+// Frequency returns the 0 hertz value
+func (r restPitch) Frequency() float64 {
+	return 0
+}
+
+// Add is a no operation, returns a RestPitch
+func (r restPitch) Add(i Interval) Pitch {
+	return r
+}
+
+// Subtract is a no operation, returns a RestPitch
+func (r restPitch) Subtract(i Interval) Pitch {
+	return r
+}
+
+// String is a no operation, returns an empty string
+func (r restPitch) String() string {
+	return ""
+}
+
+// pitchValue represents a musical frequency
+type pitchValue uint8
+
+// String returns a human readable name for this pitch
+func (p pitchValue) String() string {
+	return pitchValues[p].name
+}
+
+// Frequency returns the hertz value for this pitch
+func (p pitchValue) Frequency() float64 {
+	return pitchValues[p].frequency
+}
+
+// Add returns a new Pitch adding an interval to this pitch, making it higher
+func (p pitchValue) Add(i Interval) Pitch {
+	return pitchValue(uint8(p) + uint8(i))
+}
+
+// Subtract returns a new Pitch subtracting an interval to this pitch, making it lower
+func (p pitchValue) Subtract(i Interval) Pitch {
+	return pitchValue(uint8(p) - uint8(i))
+}
+```

@@ -32,3 +32,19 @@ func TestDurationString(t *testing.T) {
 	assert.Equal(t, `♪`, fmt.Sprint(note.Eighth))
 	assert.Equal(t, `𝅘𝅥𝅯`, fmt.Sprint(note.Sixteenth))
 }
+
+func TestDurationStringRest(t *testing.T) {
+	assert.Equal(t, `𝄻`, note.Whole.StringRest())
+	assert.Equal(t, `𝄾`, (note.Quarter / 2).StringRest())
+	assert.Equal(t, `𝄽`, (note.Eighth * 2).StringRest())
+
+	assert.Equal(t, `1/32 rest`, (note.Sixteenth / 2).StringRest())
+	assert.Equal(t, `8 rest`, (note.Double * 4).StringRest())
+
+	assert.Equal(t, `𝄺`, note.Double.StringRest())
+	assert.Equal(t, `𝄻`, note.Whole.StringRest())
+	assert.Equal(t, `𝄼`, note.Half.StringRest())
+	assert.Equal(t, `𝄽`, note.Quarter.StringRest())
+	assert.Equal(t, `𝄾`, note.Eighth.StringRest())
+	assert.Equal(t, `𝄿`, note.Sixteenth.StringRest())
+}

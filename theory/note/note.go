@@ -18,8 +18,19 @@ func NewNote(p Pitch, d Duration) Note {
 	}
 }
 
+// NewRest creates a new rest Note
+func NewRest(d Duration) Note {
+	return Note{
+		Pitch:    restPitch{},
+		Duration: d,
+	}
+}
+
 // String returns a human readable representation of this note
 func (n Note) String() string {
+	if _, ok := n.Pitch.(restPitch); ok {
+		return n.Duration.StringRest()
+	}
 	return fmt.Sprintf("%v %v", n.Duration, n.Pitch)
 }
 

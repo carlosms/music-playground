@@ -67,11 +67,11 @@ package note
 
 const (
 {{- range .Notes}}
-	{{ printf "%-8v Pitch = %v" .VarName .KeyNumber }}
+	{{ printf "%-8v pitchValue = %v" .VarName .KeyNumber }}
 {{- end}}
 )
 
-var pitchValues = map[Pitch]struct {
+var pitchValues = map[pitchValue]struct {
 	name      string
 	frequency float64
 }{

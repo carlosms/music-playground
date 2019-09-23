@@ -60,3 +60,30 @@ func (d Duration) String() string {
 		return s
 	}
 }
+
+// StringRest returns the rest note symbol
+func (d Duration) StringRest() string {
+	switch d {
+	case Double:
+		return "𝄺"
+	case Whole:
+		return "𝄻"
+	case Half:
+		return "𝄼"
+	case Quarter:
+		return "𝄽"
+	case Eighth:
+		return "𝄾"
+	case Sixteenth:
+		return "𝄿"
+	default:
+		var s string
+		f := float64(d)
+		if f < 1 {
+			s = fmt.Sprintf("1/%v rest", 1/f)
+		} else {
+			s = fmt.Sprintf("%v rest", f)
+		}
+		return s
+	}
+}
