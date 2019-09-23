@@ -17,6 +17,7 @@ This is not supposed to be a tutorial, and I don't claim to have any authority i
     - [2.1.2 The Implementation](#212-the-implementation)
   - [2.2 Pata-Pata-Pata-Pon](#22-pata-pata-pata-pon)
   - [2.3 The Sound... of Silence](#23-the-sound-of-silence)
+  - [2.4 Lost My Marbles](#24-lost-my-marbles)
 
 ## 1 Let There Be Noise
 
@@ -1623,4 +1624,116 @@ func (p pitchValue) Add(i Interval) Pitch {
 func (p pitchValue) Subtract(i Interval) Pitch {
 	return pitchValue(uint8(p) - uint8(i))
 }
+```
+
+### 2.4 Lost My Marbles
+
+Enough theory. The repository still does not have chords, scales, ADSR... but all in good time.
+
+For now with notes and rests we can play **M U S I C**. Since this whole project is a convoluted way to make music, let's play a tribute to another beautifully convoluted music instrument: [Wintergatan's Marble Machine](https://www.youtube.com/watch?v=IvUU8joBb1Q).
+
+A staff is a list of notes played. Sometimes several notes can be played at the same time. So a staff can be represented as a `[][]note.Note`. In the piano score (https://musescore.com/user/5631216/scores/1846226) there are two staffs, the treble and bass:
+
+```go
+// Marble Machine
+// Composed by Wintergatan, transcribed by Chalmers Huang
+// Transcribed to Go painstakingly manually from
+// https://musescore.com/user/5631216/scores/1846226
+var trebleStaff = [][]note.Note{
+	// Bar 1
+	[]note.Note{note.NewNote(note.E6, note.Quarter)},
+	[]note.Note{note.NewNote(note.E5, note.Eighth)},
+	[]note.Note{note.NewNote(note.B5, note.Eighth)},
+	[]note.Note{note.NewRest(note.Quarter)},
+	[]note.Note{note.NewNote(note.E5, note.Eighth)},
+	[]note.Note{note.NewNote(note.A5, note.Eighth)},
+	// Bar 2
+	[]note.Note{note.NewNote(note.G5, note.Eighth)},
+	[]note.Note{note.NewNote(note.A5, note.Eighth)},
+	[]note.Note{note.NewNote(note.E5, note.Eighth)},
+	[]note.Note{note.NewNote(note.B5, note.Eighth)},
+	[]note.Note{note.NewRest(note.Eighth)},
+	[]note.Note{note.NewNote(note.G5, note.Eighth)},
+	[]note.Note{note.NewNote(note.A5, note.Eighth)},
+	[]note.Note{note.NewNote(note.D6, note.Eighth)},
+
+	...
+
+}
+
+var bassStaff = [][]note.Note{
+	// Bar 1
+	[]note.Note{note.NewRest(note.Whole)},
+
+	...
+
+	// Bar 9
+	[]note.Note{note.NewRest(note.Quarter)},
+	[]note.Note{
+		note.NewNote(note.E4, note.Eighth),
+		note.NewNote(note.G4, note.Eighth),
+		note.NewNote(note.B4, note.Eighth)},
+	[]note.Note{note.NewRest(note.Eighth)},
+	[]note.Note{note.NewRest(note.Quarter)},
+	[]note.Note{
+		note.NewNote(note.E4, note.Eighth),
+		note.NewNote(note.G4, note.Eighth),
+		note.NewNote(note.B4, note.Eighth)},
+	[]note.Note{note.NewRest(note.Eighth)},
+
+	...
+
+}
+```
+
+A staff can produce the `io.Reader` to be be played combining the sound for groups of simultaneous notes `[]note.Note`, and then concatenating them one after the other:
+
+```go
+func play(wave synth.WaveGenerator, bpm int, staff [][]note.Note) io.Reader {
+	readers := []io.Reader{}
+
+	for _, notes := range staff {
+		groupReaders := []io.Reader{}
+
+		for _, n := range notes {
+			d := n.ToSeconds(note.Quarter, bpm)
+			w := wave(sampleRate, n.Frequency(), d)
+			r := synth.Sustain(w, 0.2)
+			groupReaders = append(groupReaders, r)
+		}
+
+		readers = append(readers, synth.Combine(groupReaders...))
+	}
+
+	return io.MultiReader(readers...)
+}
+```
+
+And then both staffs can be combined with `synth.Combine` too:
+
+```go
+func main() {
+	p, err := oto.NewPlayer(sampleRate, channelNum, bitDepthInBytes, bufferSizeInBytes)
+	if err != nil {
+		panic(err)
+	}
+	defer p.Close()
+
+	sound := synth.Combine(
+		play(synth.NewSineWave, 180, trebleStaff),
+		play(synth.NewSineWave, 180, bassStaff),
+	)
+
+	if _, err := io.Copy(p, sound); err != nil {
+		panic(err)
+	}
+}
+```
+
+You can find the complete example in [cmd/marble/main.go](./cmd/marble/main.go).
+
+##### [cmd/marble/main.go](./cmd/marble/main.go)
+
+```shell
+$ go run cmd/marble/main.go
 ```
