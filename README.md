@@ -18,6 +18,8 @@ This is not supposed to be a tutorial, and I don't claim to have any authority i
   - [2.2 Pata-Pata-Pata-Pon](#22-pata-pata-pata-pon)
   - [2.3 The Sound... of Silence](#23-the-sound-of-silence)
   - [2.4 Lost My Marbles](#24-lost-my-marbles)
+- [3 Harmony](#3-harmony)
+  - [3.1 Scaling Up](#31-scaling-up)
 
 ## 1 Let There Be Noise
 
@@ -1736,4 +1738,265 @@ You can find the complete example in [cmd/marble/main.go](./cmd/marble/main.go).
 
 ```shell
 $ go run cmd/marble/main.go
+```
+
+## 3 Harmony
+
+### 3.1 Scaling Up
+
+A **scale** is an ordered group of notes, in ascending or descending order.
+It is usually described by the distance (**interval**) between two consecutive notes.
+
+This group of notes is used to guide the composition of melodies and harmonies.
+
+The easiest scale to build is the **chromatic scale**, which defined as intervals between each note looks like:
+
+```
+half, half, half, half, half, half, half, half, half, half, half, half
+```
+
+Visualized in a line, the chromatic scale is just the list of all the 12 notes in an octave. If we apply the interval patter to the **C** note, we get this:
+
+```
+...┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─...
+   │     │     │     │     │     │     │     │     │     │     │     │     │    
+   |half |half |half |half |half |half |half |half |half |half |half |half |    
+   │     │     │     │     │     │     │     │     │     │     │     │     │    
+   *     *     *     *     *     *     *     *     *     *     *     *     *    
+   C   C#/Db   D   D#/Eb   E     F   F#/Gb   G   G#/Ab   A   A#/Bb   B     C
+```
+
+The other scale already mentioned in a previous section is the **major scale**, which has this sequence of intervals:
+
+```
+whole, whole, half, whole, whole, whole, half
+```
+
+```
+...┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─...
+   │           │           │     │           │           │           │     │    
+   *           *           *     *           *           *           *     *    
+       whole       whole    half     whole       whole       whole    half
+```
+
+If we apply this interval to the note C, we get the **C major scale**. C is the starting point, a **whole** step above it is D, another **whole** step above is E, **half** a step above is F, and so on.
+
+```
+...┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─...
+   C   C#/Db   D   D#/Eb   E     F   F#/Gb   G   G#/Ab   A   A#/Bb   B     C
+   │           │           │     │           │           │           │     │    
+   |   whole   |   whole   |half |   whole   |   whole   |   whole   |half |    
+   │           │           │     │           │           │           │     │
+   *           *           *     *           *           *           *     *    
+   C           D           E     F           G           A           B     C
+```
+
+This pattern can be applied to any starting note, not only natural notes. It can be applied to any of the 12 notes, for example, E. This is the **E major scale**:
+
+```
+...┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─...
+   E     F   F#/Gb   G   G#/Ab   A   A#/Bb   B     C   C#/Db   D   D#/Eb   E
+   │           │           │     │           │           │           │     │    
+   |   whole   |   whole   |half |   whole   |   whole   |   whole   |half |    
+   │           │           │     │           │           │           │     │
+   *           *           *     *           *           *           *     *
+   E           F#          G#    A           B           C#          D#    E
+```
+
+The **natural minor scale** follows this other pattern of step intervals:
+
+```
+whole, half, whole, whole, half, whole, whole
+```
+
+```
+...┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─...
+   │           │     │           │           │     │           │           │    
+   *           *     *           *           *     *           *           *    
+       whole    half     whole       whole    half     whole       whole
+```
+
+Applying this pattern to A we get the **A natural minor scale**:
+
+```
+...┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─...
+   A   A#/Bb   B     C   C#/Db   D   D#/Eb   E     F   F#/Gb   G   G#/Ab   A
+   │           │     │           │           │     │           │           │    
+   |   whole   |half |   whole   |   whole   |half |   whole   |   whole   |
+   │           │     │           │           │     │           │           │
+   *           *     *           *           *     *           *           *    
+   A           B     C           D           E     F           G           A
+```
+
+The reason why a scale is called **major** or **minor** has to do with **intervals**. 
+
+**Step**, **half step**, and **octave** are names for intervals between 2 notes. There are other interval names based on the **major scale**. Because a scale can be moved and applied to any note, the notes of a scale can also be called by their **scale degrees**, their relative position in the **major scale**. Arabic numerals are used for this.
+
+This relative position in the **major scale** gives name to commonly used **intervals**. Note that the last note of the scale is the same as the first one, but one octave above. The same number, 1, is used. The pattern then repeats one octave higher, with the same numbering (1, 2, 3...).
+
+```
+   ◄------------------------------- octave -------------------------------►◄----- octave --...
+...┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬───...
+   │           │           │     │           │           │           │     │           │
+   |   whole   |   whole   |half |   whole   |   whole   |   whole   |half |   whole   |
+   │           │           │     │           │           │           │     │           │
+   *           *           *     *           *           *           *     *           *
+   1           2           3     4           5           6           7     1           2
+   ◄► Unison (same note)
+   ◄----------► Second (whole step)
+   ◄----------------------► Third (2 steps)
+   ◄----------------------------► Fourth (2 and a half steps)
+   ◄--- Fifth (3 and a half steps) ---------►
+   ◄--- Sixth (4 and a half steps) ---------------------►
+   ◄--- Seventh (5 and a half steps) -------------------------------►
+   ◄--- Octave (12 half steps) -------------------------------------------►
+   ◄--- Ninth (7 steps) --------------------------------------------------------------►
+```
+
+For the notes that are not in the major scale, we use something similar to the note accidentals. Instead of natural, sharp, and flat, we use **perfect**, **augmented**, and **diminished**. A perfect interval is implied when its name is not augmented or diminished.
+
+```
+...┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬───...
+   │           │           │     │           │           │           │     │           │
+   *           *           *     *           *           *           *     *           *
+   1           2           3     4           5           6           7     1           2
+   ◄--- Diminished Sixth -------------------------►
+   ◄--- Perfect Sixth ----------------------------------►
+   ◄--- Augmented Sixth --------------------------------------►
+```
+
+A scale is called **minor** when it contains a diminished third, and **major** when it contains a perfect third. Commonly these 2 intervals are just called **minor third** and **major third**.
+
+Now let's take another look at the major and minor scale patterns:
+
+```
+major:         whole, whole, half,  whole, whole, whole, half
+natural minor: whole, half,  whole, whole, half,  whole, whole
+```
+
+Let's see what happens when we compare the G major scale to the E minor scale:
+```
+G major scale
+...┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─...
+   G   G#/Ab   A   A#/Bb   B     C   C#/Db   D   D#/Eb   E     F   F#/Gb   G
+   │           │           │     │           │           │           │     │    
+   |   whole   |   whole   |half |   whole   |   whole   |   whole   |half |    
+   │           │           │     │           │           │           │     │
+   *           *           *     *           *           *           *     *
+   G           A           B     C           D           E           F#    G
+
+E minor scale
+...┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┬─...
+   E     F   F#/Gb   G   G#/Ab   A   A#/Bb   B     C   C#/Db   D   D#/Eb   E
+   │           │     │           │           │     │           │           │    
+   |   whole   |half |   whole   |   whole   |half |   whole   |   whole   |
+   │           │     │           │           │     │           │           │
+   *           *     *           *           *     *           *           *    
+   E           F#    G           A           B     C           D           E
+```
+
+They contain the same pool of notes, but reordered. This is because the patterns are actually the same pattern, but shifted:
+
+```
+major:         whole, whole, half,  whole, whole, whole, half
+natural minor:                                    whole, half,  whole, whole, half,  whole, whole
+```
+
+All the patterns that can be built shifting the major scale pattern are valid scales, but they are usually called **modes**. All of the modes have their own name, this is the complete list:
+
+```
+Ionian     whole, whole, half,  whole, whole, whole, half
+Dorian            whole, half,  whole, whole, whole, half,  whole
+Phrygian                 half,  whole, whole, whole, half,  whole, whole
+Lydian                          whole, whole, whole, half,  whole, whole, half
+Mixolydian                             whole, whole, half,  whole, whole, half,  whole
+Aeolian                                       whole, half,  whole, whole, half,  whole, whole
+Locrian                                              half,  whole, whole, half,  whole, whole, whole
+```
+
+The Ionian mode is commonly known as _the major scale_, and the Aeolian mode as _the natural minor scale_.
+
+The **major** and **minor** scales are probably the two most common ones. But by definition any pattern, with any number of notes, can be considered a scale. Of course not all of them will sound good.
+
+The most commonly used scales are, in no particular order:
+
+| | | |
+| --- | --- | --- |
+| Major scale       |                                   | whole, whole, half, whole, whole, whole, half |
+| Major scale modes | Ionian (aka Major scale)          | whole, whole, half, whole, whole, whole, half |
+|                   | Dorian                            | whole, half, whole, whole, whole, half, whole |
+|                   | Phrygian                          | half, whole, whole, whole, half, whole, whole |
+|                   | Lydian                            | whole, whole, whole, half, whole, whole, half |
+|                   | Mixolydian                        | whole, whole, half, whole, whole, half, whole |
+|                   | Aeolian (aka Natural Minor scale) | whole, half, whole, whole, half, whole, whole |
+|                   | Locrian                           | half, whole, whole, half, whole, whole, whole |
+| Minor scales      | Natural Minor       | whole, half, whole, whole, half, whole, whole |
+|                   | Harmonic Minor      | whole, half, whole, whole, half, whole and a half, half |
+|                   | Melodic Minor       | whole, half, whole, whole, whole, whole, half |
+| Pentatonic scales | Minor Pentatonic    | whole and a half, whole, whole, whole and a half, whole |
+|                   | Major Pentatonic    | whole, whole, whole and a half, whole, whole and a half |
+| Blues scale       |                     | whole and a half, whole, half, half, whole and a half, whole |
+| Whole-tone scale  |                     | whole, whole, whole, whole, whole, whole |
+
+The implementation of scales in code could look like this:
+
+```go
+func Major(tonic note.Pitch) []note.Pitch {
+	var pattern = []note.Interval{
+		note.Tone, note.Tone, note.Semitone, note.Tone, note.Tone, note.Tone, note.Semitone}
+
+	scale := []note.Pitch{tonic}
+	for _, interval := range pattern {
+		scale = append(scale, scale[len(scale)-1].Add(interval))
+	}
+
+	return scale
+}
+```
+
+Just take a pattern, and build a slice adding intervals to the last element. Refactoring this to be more generic, the final code looks like this:
+
+```go
+func scale(tonic note.Pitch, pattern []note.Interval) []note.Pitch {
+	scale := []note.Pitch{tonic}
+	for _, interval := range pattern {
+		scale = append(scale, scale[len(scale)-1].Add(interval))
+	}
+
+	return scale
+}
+
+var major = []note.Interval{
+	note.Tone, note.Tone, note.Semitone, note.Tone, note.Tone, note.Tone, note.Semitone}
+
+func Major(tonic note.Pitch) []note.Pitch {
+	return scale(
+		tonic,
+		major,
+	)
+}
+```
+
+For the modes of the major scale we can shift the pattern we already have, like this:
+
+```go
+
+// shift a pattern n positions to the left
+func shift(pattern []note.Interval, n int) []note.Interval {
+	return append(pattern[n:], pattern[0:n]...)
+}
+
+func Ionian(tonic note.Pitch) []note.Pitch {
+	return Major(tonic)
+}
+
+func Dorian(tonic note.Pitch) []note.Pitch {
+	return scale(tonic, shift(major, 1))
+}
+
+func Phrygian(tonic note.Pitch) []note.Pitch {
+	return scale(tonic, shift(major, 2))
+}
+
+...
 ```
