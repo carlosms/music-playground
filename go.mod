@@ -9,5 +9,5 @@ require (
 	golang.org/x/exp v0.0.0-20190627132806-fd42eb6b336f // indirect
 	golang.org/x/image v0.0.0-20190622003408-7e034cad6442 // indirect
 	golang.org/x/mobile v0.0.0-20190607214518-6fa95d984e88 // indirect
-	golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb // indirect
+	golang.org/x/sys v0.1.0 // indirect
 )
